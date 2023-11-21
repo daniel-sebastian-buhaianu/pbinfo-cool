@@ -3,16 +3,17 @@
 #define MAX_NR 1000
 using namespace std;
 void citesteDateleDeIntrare(int & P, int & N, int & K, int A[]);
-bool esteSecventaCool(int vector[], int pozitieInceput, int lungime, int & maxim, int & nrValoriDistincte);
+bool esteSecventaCool(int vector[], int pozitieInceput, int lungime,
+                      int & minim, int & maxim, int & nrValoriDistincte);
 int main()
 {
 	int P, N, K, A[MAX_N];
 	citesteDateleDeIntrare(P, N, K, A);
 	ofstream scrie("cool.out");
+	int minim, maxim, nrValoriDistincte;
 	if (P == 1)
 	{
-		int maxim, nrValoriDistincte;
-		if(esteSecventaCool(A, 0, K, maxim, nrValoriDistincte))
+		if(esteSecventaCool(A, 0, K, minim, maxim, nrValoriDistincte))
 			scrie << maxim;
 		else
 			scrie << nrValoriDistincte;
@@ -24,41 +25,36 @@ int main()
 		nrSecvente = lungimeMaxima = amGasitSolutie = 0;
 		for (int lungime = N; lungime >= 1 && !amGasitSolutie; lungime--)
 			for (int i = 0; i <= N-lungime; i++)
-			{
-				int maxim, nrValoriDistincte;
-				if (esteSecventaCool(A, i, lungime, maxim, nrValoriDistincte))
+				if (esteSecventaCool(A, i, lungime, minim, maxim, nrValoriDistincte))
 				{
 					nrSecvente++;
-					if(!lungimeMaxima)
+					if (!lungimeMaxima)
 						lungimeMaxima = lungime;
 					if (!amGasitSolutie)
 						amGasitSolutie = 1;
 				}
-			}
-		scrie << lungimeMaxima << '\n';
-		scrie << nrSecvente;
+		scrie << lungimeMaxima << '\n' << nrSecvente;
 	}
 	scrie.close();
 	return 0;
 }
-bool esteSecventaCool(int vector[], int pozitieInceput, int lungime, int & maxim, int & nrValoriDistincte)
+bool esteSecventaCool(int vector[], int pozitieInceput, int lungime,
+                      int & minim, int & maxim, int & nrValoriDistincte)
 {
 	// verifica daca secventa care incepe la pozitia 'pozitieInceput'
 	// de lungime 'lungime' din vectorul 'vector' este o secventa cool
-	// si furnizeaza valoarea maxima, respectiv numarul de valori
-	// distincte din secventa prin parametrii 'maxim' si 'nrValoriDistincte'
+	// si furnizeaza valoarea minima, maxima, respectiv numarul de valori
+	// distincte din secventa 
+	bool esteCool = 1;
 	if (lungime == 1)
 	{
-		maxim = vector[pozitieInceput];
+		minim = maxim = vector[pozitieInceput];
 		nrValoriDistincte = 1;
-		return 1;
 	}
 	else
 	{
-		int frecventa[MAX_NR+1], esteNevoieDe[MAX_NR+1];
-		int i, minim;
-		bool esteCool = 1;
-		for (i = 0; i <= MAX_NR; i++) frecventa[i] = esteNevoieDe[i] = 0;
+		int frecventa[MAX_NR+1], i;
+		for (i = 0; i <= MAX_NR; i++) frecventa[i] = 0;
 		if (vector[pozitieInceput] < vector[pozitieInceput+1])
 		{
 			minim = vector[pozitieInceput];
@@ -69,48 +65,32 @@ bool esteSecventaCool(int vector[], int pozitieInceput, int lungime, int & maxim
 			minim = vector[pozitieInceput+1];
 			maxim = vector[pozitieInceput];
 		}
-		frecventa[minim]++, lungime--;
-		frecventa[maxim]++, lungime--;
-		if (frecventa[minim] > 1 || frecventa[maxim] > 1)
-			esteCool = 0;
-		for (i = minim+1; i < maxim; i++) esteNevoieDe[i] = 1;
-		for (i = pozitieInceput+2; lungime > 0; i++, lungime--)
+		frecventa[minim]++;
+		frecventa[maxim]++;
+		for (i = pozitieInceput + 2; i < pozitieInceput + lungime; i++)
 		{
 			frecventa[vector[i]]++;
-			if (frecventa[vector[i]] > 1)
-				esteCool = 0;
-			if (vector[i] > minim && vector[i] < maxim)
-			{
-				if (esteNevoieDe[vector[i]])
-					esteNevoieDe[vector[i]] = 0;
-			}
-			else
-			{
-				int j;
-				if (vector[i] < minim)
-				{
-					for (j = minim-1; j > vector[i]; j--)
-						esteNevoieDe[j] = 1;
-					minim = vector[i];
-				}
-				if (vector[i] > maxim)
-				{
-					for (j = maxim+1; j < vector[i]; j++)
-						esteNevoieDe[j] = 1;
-					maxim = vector[i];
-				}
-			}
+			if (vector[i] < minim)
+				minim = vector[i];
+			if (vector[i] > maxim)
+				maxim = vector[i];
 		}
 		nrValoriDistincte = 0;
 		for (i = minim; i <= maxim; i++)
 		{
-			if (frecventa[i] == 1)
-				nrValoriDistincte++;
-			if (esteNevoieDe[i])
+			if (frecventa[i] > 1)
 				esteCool = 0;
+			else
+				if (frecventa[i] == 1)
+					nrValoriDistincte++;
 		}
-		return esteCool;
+		if (maxim != (minim + lungime-1))
+			esteCool = 0;
+		else
+			if (nrValoriDistincte != lungime)
+				esteCool = 0;
 	}
+	return esteCool;
 }
 void citesteDateleDeIntrare(int & P, int & N, int & K, int A[])
 {
