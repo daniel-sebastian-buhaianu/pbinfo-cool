@@ -2,97 +2,90 @@
 #define MAX_N 5000
 #define MAX_NR 1000
 using namespace std;
-void citesteDateleDeIntrare(int & P, int & N, int & K, int A[]);
-bool esteSecventaCool(int vector[], int pozitieInceput, int lungime,
-                      int & minim, int & maxim, int & nrValoriDistincte);
+int A[MAX_N];
+int P, N, K;
+void citesteDateleDeIntrare();
+void rezolvaCerinta1();
+void rezolvaCerinta2();
 int main()
 {
-	int P, N, K, A[MAX_N];
-	citesteDateleDeIntrare(P, N, K, A);
-	ofstream scrie("cool.out");
-	int minim, maxim, nrValoriDistincte;
+	citesteDateleDeIntrare();
 	if (P == 1)
-	{
-		if(esteSecventaCool(A, 0, K, minim, maxim, nrValoriDistincte))
-			scrie << maxim;
-		else
-			scrie << nrValoriDistincte;
-	}
+		rezolvaCerinta1();
 	else
-	{
-		int nrSecvente, lungimeMaxima;
-		bool amGasitSolutie;
-		nrSecvente = lungimeMaxima = amGasitSolutie = 0;
-		for (int lungime = N; lungime >= 1 && !amGasitSolutie; lungime--)
-			for (int i = 0; i <= N-lungime; i++)
-				if (esteSecventaCool(A, i, lungime, minim, maxim, nrValoriDistincte))
-				{
-					nrSecvente++;
-					if (!lungimeMaxima)
-						lungimeMaxima = lungime;
-					if (!amGasitSolutie)
-						amGasitSolutie = 1;
-				}
-		scrie << lungimeMaxima << '\n' << nrSecvente;
-	}
-	scrie.close();
+		rezolvaCerinta2();
 	return 0;
 }
-bool esteSecventaCool(int vector[], int pozitieInceput, int lungime,
-                      int & minim, int & maxim, int & nrValoriDistincte)
+void rezolvaCerinta2()
 {
-	// verifica daca secventa care incepe la pozitia 'pozitieInceput'
-	// de lungime 'lungime' din vectorul 'vector' este o secventa cool
-	// si furnizeaza valoarea minima, maxima, respectiv numarul de valori
-	// distincte din secventa 
-	bool esteCool = 1;
-	if (lungime == 1)
+	int i, uz[MAX_NR+1], lungimeMaxima, nrSecvente;
+	for (i = 0; i <= MAX_NR; i++) uz[i] = 0;
+	for (lungimeMaxima = i = 0; i < N-1; i++)
 	{
-		minim = maxim = vector[pozitieInceput];
-		nrValoriDistincte = 1;
+		int minim, maxim, lungime, j;
+		minim = maxim = A[i];
+		lungime = uz[A[i]] = 1;
+		if (lungime > lungimeMaxima)
+		{
+			lungimeMaxima = lungime;
+			nrSecvente = 1;
+		}
+		else if (lungime == lungimeMaxima)
+			nrSecvente++;
+		for (j = i+1; j < N; j++)
+		{
+			if (uz[A[j]])
+				break;
+			uz[A[j]] = 1;
+			if (A[j] < minim)
+				minim = A[j];
+			if (A[j] > maxim)
+				maxim = A[j];
+			lungime = j-i+1;
+			if (maxim-minim == lungime-1)
+			{
+				if (lungime > lungimeMaxima)
+				{
+					lungimeMaxima = lungime;
+					nrSecvente = 1;
+				}
+				else if (lungime == lungimeMaxima)
+					nrSecvente++;
+			}
+		}
+		for (j = 0; j <= MAX_NR; j++) uz[j] = 0;
 	}
-	else
-	{
-		int frecventa[MAX_NR+1], i;
-		for (i = 0; i <= MAX_NR; i++) frecventa[i] = 0;
-		if (vector[pozitieInceput] < vector[pozitieInceput+1])
-		{
-			minim = vector[pozitieInceput];
-			maxim = vector[pozitieInceput+1];
-		}
-		else
-		{
-			minim = vector[pozitieInceput+1];
-			maxim = vector[pozitieInceput];
-		}
-		frecventa[minim]++;
-		frecventa[maxim]++;
-		for (i = pozitieInceput + 2; i < pozitieInceput + lungime; i++)
-		{
-			frecventa[vector[i]]++;
-			if (vector[i] < minim)
-				minim = vector[i];
-			if (vector[i] > maxim)
-				maxim = vector[i];
-		}
-		nrValoriDistincte = 0;
-		for (i = minim; i <= maxim; i++)
-		{
-			if (frecventa[i] > 1)
-				esteCool = 0;
-			else
-				if (frecventa[i] == 1)
-					nrValoriDistincte++;
-		}
-		if (maxim != (minim + lungime-1))
-			esteCool = 0;
-		else
-			if (nrValoriDistincte != lungime)
-				esteCool = 0;
-	}
-	return esteCool;
+	ofstream scrie("cool.out");
+	scrie << lungimeMaxima << '\n' << nrSecvente;
+	scrie.close();
 }
-void citesteDateleDeIntrare(int & P, int & N, int & K, int A[])
+void rezolvaCerinta1()
+{
+	int minim, maxim, nrValoriDistincte, i, frecventa[MAX_NR+1];
+	for (i = 0; i <= MAX_NR; i++) frecventa[i] = 0;
+	minim = maxim = A[0];
+	frecventa[A[0]] = 1;
+	for (i = 1; i < K; i++)
+	{
+		frecventa[A[i]]++;
+		if (A[i] < minim)
+			minim = A[i];
+		if (A[i] > maxim)
+			maxim = A[i];
+	}
+	nrValoriDistincte = 0;
+	for (i = minim; i <= maxim; i++)
+		if (frecventa[i] == 1)
+			nrValoriDistincte++;
+	ofstream scrie("cool.out");
+	if (nrValoriDistincte == K
+	    && maxim-minim == K-1)
+		scrie << maxim;
+	else
+		scrie << nrValoriDistincte;
+	scrie.close();
+}
+void citesteDateleDeIntrare()
 {
 	ifstream citeste("cool.in");
 	citeste >> P;
